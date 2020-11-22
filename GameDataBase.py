@@ -28,18 +28,19 @@ class GameDataBase():
 				except:
 					print(f"{h} is not a float, defaults to 0")
 					clean_data[h] = 0
-		print(clean_data)
+		# print(clean_data)
 		return clean_data
 
-	def add_record(self, raw_data):
+	def add_record(self, raw_data, target_id = None):	#target id used for editing records
 		clean_data = self.parse_input(raw_data)
-		if clean_data == []:
-			return False
-		i = 0	#finding the smalles available id
-		while i in self.data.keys():	#may be changed later
-			i+=1
-		# print(clean_data)
-		self.data.update({i : {k:v for k,v in zip(self.headers,clean_data)}}) #adding the new record
+		if target_id is None:
+			i = 0	#finding the smallest available id
+			while i in self.data.keys():	#may be changed later
+				i+=1
+		else:
+			i = target_id	#using the prechosen id
+		# print("clean data is ",clean_data)
+		self.data.update({i : clean_data}) #adding the new record
 
 		print("-added new record at index {}".format(i))
 
@@ -55,9 +56,10 @@ class GameDataBase():
 		if len(self.data) == 0:
 			print("-the database is empty.")
 		else: 
-			print(self.data)
+			# print(self.data)
 			table = [[k]+list(v.values()) for k,v in self.data.items()]		#used to be psql
-			print(tb.tabulate(table, headers="keys", numalign="right", showindex=True, floatfmt=("id","name",".1f","comp",".1f",".2f")))
+			keys = ["id"]+self.headers
+			print(tb.tabulate(table, headers=keys, numalign="right", showindex=True, floatfmt=("","",".1f","",".1f",".2f")))
 
 	def input_record(self):
 		res = []

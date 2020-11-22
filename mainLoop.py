@@ -14,13 +14,13 @@ def createTableData(gdb, sortby = "id", sortdir = "ascending"):
 		sort_key = lambda x: x[0]
 	sorted_dict = {k: v for k, v in sorted(gdb.data.items(), key=sort_key, reverse=rev)}
 	data = [[k]+list(v.values()) for k,v in sorted_dict.items()]
-	print(data)
+	#print(data)
 	for row in data:		#TODO possibly change it so its not that hardcoded like this
-		if row[1+1] is not None:
+		if row[1+1] != 'null':
 			row[1+1] = "{:.1f}".format(float(row[1+1]))
-		if row[3+1] is not None:
+		if row[3+1] != 'null':
 			row[3+1] = "{:.1f}".format(float(row[3+1]))
-		if row[4+1] is not None:
+		if row[4+1] != 'null':
 			row[4+1] = "{:.2f}".format(float(row[4+1]))
 	return data
 
@@ -45,9 +45,9 @@ def createLayout(gdb):
 						header_background_color='SteelBlue2',
 						vertical_scroll_only=False,
 						enable_events=True,
-						tooltip='Ma tabela')
+						tooltip='The GameDataBase table')
 	
-	addRemoveFrame = sg.Frame(title="Record management", layout=[[sg.Button('Add record'), sg.Button('Remove records')]])
+	addRemoveFrame = sg.Frame(title="Record management", layout=[[sg.Button('Add record'), sg.Button('Remove records')],[sg.Button('Edit record')]])
 	sortingFrame = sg.Frame(title="Sort by", layout= [[ 
 							 sg.Listbox(["id"] + gdb.headers,
 								   size=(11,len(gdb.headers)+1),
@@ -81,9 +81,16 @@ def createInputWindow(gdb):
 	layout.append([sg.Button("Add"), sg.Button("Cancel")])
 	return sg.Window("Add a new record", keep_on_top="True", layout=layout, finalize=True)
 
+def createEditWindow(gdb, id_to_edit):
+	layout = [[sg.Text("{:10}:".format(h)), sg.Input(gdb.data[id_to_edit][h])] for h in gdb.headers]
+	layout.append([sg.Button("Apply"), sg.Button("Cancel")])
+	return sg.Window("Edit a record", keep_on_top="True", layout=layout, finalize=True)
+
 def GUI(gdb):
 	window1 = sg.Window('The Table Element', layout=createLayout(gdb), font=('Helvetica', 14), finalize=True)
 	window2 = None
+	window3 = None
+	edited_id = None
 
 	while True:
 		window, event, values = sg.read_all_windows()
@@ -94,28 +101,47 @@ def GUI(gdb):
 				window2 = None
 			elif window == window1:     # if closing win 1, exit program
 				break
-		elif window == window2:
-			if event == "Add":  #TODO add type parsing
+		
+		elif window == window2:	#ADD window
+			if event == "Add":
 				gdb.add_record(list(values.values())) #values is a dict with keys 0,1,2,3,..,len(inputs)
 				print("Adding")
 				window1['-TABLE-'].update(values = createTableData(gdb))
 			window.close()  #close window2 anyway
 			window2 = None
+		
+		elif window == window3:	#EDIT window
+			if event == "Apply":
+				gdb.remove_record(edited_id)
+				gdb.add_record(list(values.values()))
+				window1['-TABLE-'].update(values = createTableData(gdb))
+			window.close()  #close window2 anyway
+			window3 = None
+		
 		elif window == window1:
 			if event == 'Add record' and not window2:
 				window2 = createInputWindow(gdb)
+			
 			elif event in ['-SORTBY-','-SORTDIR-']:
 				window1['-TABLE-'].update(values = createTableData(gdb, values['-SORTBY-'][0], values['-SORTDIR-'][0]))
+			
 			elif event == "Remove records":
 				ids_to_remove = sg.popup_get_text("Input multiple ids separated by space:", title="Remove record", size=(30,45))
 				print(f"-removing {ids_to_remove}")
-				for i in ids_to_remove.split(' '):
-					try:
-						i = int(i)
-					except:
-						print(f"invalid id {i}")
-					gdb.remove_record(i)
-				window1['-TABLE-'].update(values = createTableData(gdb))
+				if ids_to_remove is not None: #if user cancelled the action
+					for i in ids_to_remove.split(' '):
+						try:
+							i = int(i)
+						except:
+							print(f"invalid id {i}")
+						gdb.remove_record(i)
+					window1['-TABLE-'].update(values = createTableData(gdb))
+			
+			elif event == "Edit record":
+				curr_id = values['-TABLE-']
+				if len(curr_id) > 0:
+					edited_id = curr_id[0]
+					window3 = createEditWindow(gdb, edited_id)
 	window.close()
 
 GUI(gdb)
