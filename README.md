@@ -2,5 +2,4 @@
 A simple data base with GUI created using PySimpleGUI
 
 setup
-pip install Tabulate
-pip install PySimpleGui
+pip install Tabulate PySimpleGui
