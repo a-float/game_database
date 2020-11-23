@@ -20,14 +20,14 @@ class GameDataBase():
 				try:
 					clean_data[h] = float(raw_data[i])
 				except:
-					print(f"{h} is not a string, defaults to 'null'")
-					clean_data[h] = 'null'
-			elif self.types[h] == str and raw_data[i] != "":
+					print(f"-{h} isn't a float: \n\tdefaults to -1")
+					clean_data[h] = -1
+			elif self.types[h] == str:
 				try:
 					clean_data[h] = str(raw_data[i])
 				except:
-					print(f"{h} is not a float, defaults to 0")
-					clean_data[h] = 0
+					print(f"-{h} isn't a string: \n\tdefaults to 'null'")
+					clean_data[h] = 'null'
 		# print(clean_data)
 		return clean_data
 
@@ -48,13 +48,13 @@ class GameDataBase():
 	def remove_record(self, index):
 		if(index in self.data.keys()):
 			del self.data[index]
-			print("-record {} has been deleted.".format(index))
+			print("-record {} has been deleted".format(index))
 		else:
-			print("-record {} does not exist.".format(index))
+			print("-record {} does not exist".format(index))
 
 	def show(self):
 		if len(self.data) == 0:
-			print("-the database is empty.")
+			print("-the database is empty")
 		else: 
 			# print(self.data)
 			table = [[k]+list(v.values()) for k,v in self.data.items()]		#used to be psql
@@ -68,12 +68,12 @@ class GameDataBase():
 		self.add_record(res)
 
 	def input_remove(self):
-		i = input("Type the id of the record to be deleted: ")
+		i = input("-Type the id of the record to be deleted: ")
 		try:
 			i = int(i)
 			gdb.remove_record(i)
 		except:
-			print("Invalid record id")
+			print("-Invalid record id")
 	
 	# def save_data(self):
 	# def load_data(self):	

@@ -5,7 +5,6 @@ sg.theme('Default1')
 
 # ------ Make the Table Data ------
 def createTableData(gdb, sortby = "id", sortdir = "ascending"):
-	print(f"-sorting by {sortby} {sortdir}")
 	rev = False if sortdir=="ascending" else True
 
 	if sortby != "id":
@@ -56,41 +55,48 @@ def createLayout(gdb):
 								   enable_events=True, 
 								   k='-SORTBY-'),
 						 	 sg.Listbox(["ascending", "descending"], 
+							 	   pad=((0,60),(0,0)),
 								   size=(12,2),
 								   default_values="ascending",
 								   select_mode='LISTBOX_SELECT_MODE_SINGLE',
 								   enable_events=True,
 								   k='-SORTDIR-')]])
+
+	logFrame = sg.Frame(title="Log", font=12, layout = [[sg.Output(size=(30,9))]])
+
 	rightContent = [
 					  [addRemoveFrame],
-					  [sortingFrame]
+					  [sortingFrame],
+					  [logFrame]
 				   ]
 
 	rightPanel = sg.Column(rightContent, 
 							vertical_alignment="top",
 							pad=(5,10),
-							# expand_y=True,
-							# background_color='lightyellow'
 							)
 
 	layout = [[leftPanel, sg.VSeperator(color='grey90'), rightPanel]]
 	return layout
 
+	#TODO add a global font setting
+
 def createInputWindow(gdb):
 	layout = [[sg.Text("{:10}:".format(h)), sg.Input(h[1:4])] for h in gdb.headers]
 	layout.append([sg.Button("Add"), sg.Button("Cancel")])
-	return sg.Window("Add a new record", keep_on_top="True", layout=layout, finalize=True)
+	return sg.Window("Add a new record", font=('Helvetica', 14), keep_on_top="True", layout=layout, finalize=True)
 
 def createEditWindow(gdb, id_to_edit):
 	layout = [[sg.Text("{:10}:".format(h)), sg.Input(gdb.data[id_to_edit][h])] for h in gdb.headers]
 	layout.append([sg.Button("Apply"), sg.Button("Cancel")])
-	return sg.Window("Edit a record", keep_on_top="True", layout=layout, finalize=True)
+	return sg.Window("Edit a record", font=('Helvetica', 14), keep_on_top="True", layout=layout, finalize=True)
 
 def GUI(gdb):
 	window1 = sg.Window('The Table Element', layout=createLayout(gdb), font=('Helvetica', 14), finalize=True)
 	window2 = None
 	window3 = None
 	edited_id = None
+	sortby = "id"		#kinga sketchy, should probably be changed
+	sortdir = "ascending"
 
 	while True:
 		window, event, values = sg.read_all_windows()
@@ -105,8 +111,7 @@ def GUI(gdb):
 		elif window == window2:	#ADD window
 			if event == "Add":
 				gdb.add_record(list(values.values())) #values is a dict with keys 0,1,2,3,..,len(inputs)
-				print("Adding")
-				window1['-TABLE-'].update(values = createTableData(gdb))
+				updateTable(window1, sortby, sortdir)
 			window.close()  #close window2 anyway
 			window2 = None
 		
@@ -114,7 +119,7 @@ def GUI(gdb):
 			if event == "Apply":
 				gdb.remove_record(edited_id)
 				gdb.add_record(list(values.values()))
-				window1['-TABLE-'].update(values = createTableData(gdb))
+				updateTable(window1, sortby, sortdir)
 			window.close()  #close window2 anyway
 			window3 = None
 		
@@ -123,8 +128,11 @@ def GUI(gdb):
 				window2 = createInputWindow(gdb)
 			
 			elif event in ['-SORTBY-','-SORTDIR-']:
-				window1['-TABLE-'].update(values = createTableData(gdb, values['-SORTBY-'][0], values['-SORTDIR-'][0]))
-			
+				sortby = values['-SORTBY-'][0]
+				sortdir = values['-SORTDIR-'][0]
+				print(f"-sorting by {sortby} {sortdir}")
+				updateTable(window1, sortby, sortdir)
+
 			elif event == "Remove records":
 				ids_to_remove = sg.popup_get_text("Input multiple ids separated by space:", title="Remove record", size=(30,45))
 				print(f"-removing {ids_to_remove}")
@@ -135,13 +143,21 @@ def GUI(gdb):
 						except:
 							print(f"invalid id {i}")
 						gdb.remove_record(i)
-					window1['-TABLE-'].update(values = createTableData(gdb))
+				updateTable(window1, sortby, sortdir)
 			
 			elif event == "Edit record":
-				curr_id = values['-TABLE-']
-				if len(curr_id) > 0:
-					edited_id = curr_id[0]
-					window3 = createEditWindow(gdb, edited_id)
+				#need to get the actual id taking sorting into account
+				selected_ids = values['-TABLE-'] #currently selected table records
+				if len(selected_ids) > 0: #at least one selected
+					#chosing the most recent one, and [0] to acces the id column
+					real_id = int(window['-TABLE-'].get()[selected_ids[-1]][0]) 
+					edited_id = real_id
+					window3 = createEditWindow(gdb, real_id)
+				else:
+					print("-select a table record first")
 	window.close()
+
+def updateTable(window1, sortby, sortdir):
+	window1['-TABLE-'].update(values = createTableData(gdb, sortby, sortdir))
 
 GUI(gdb)
