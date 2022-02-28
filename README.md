@@ -1,5 +1,5 @@
 # game_data_base
-A simple data base with GUI created using PySimpleGUI
+A simple dict based database with GUI created using PySimpleGUI
 
 ### setup: <br/>
 `pip install Tabulate PySimpleGui`
