@@ -1,5 +1,5 @@
 import PySimpleGUI as sg
-from game_data_base import *
+from game_database import gdb
 
 sg.theme('Default1')
 
@@ -36,7 +36,7 @@ def createLayout(gdb):
 						header_background_color='SteelBlue2',
 						vertical_scroll_only=False,
 						enable_events=True,
-						tooltip='The GameDataBase table')
+						tooltip='The GameDatabase table')
 	
 	btnPad = ((6,7),(0,6))
 	mngmtFrame = sg.Frame(title="Record management", font=11, layout=[[sg.Button('Add record',pad=btnPad), sg.Button('Remove',pad=btnPad),sg.Button('Edit record',pad=btnPad)]])
@@ -56,7 +56,7 @@ def createLayout(gdb):
 								   k='-SORTDIR-')]])
 
 	#logFrame = sg.Frame(title="Log", font=12, layout = [[sg.Output(size=(30,9))]])
-	logFrame = sg.Frame(title="Log", font=11, layout = [[sg.Text("qweqwe",size=(30,9))]])
+	logFrame = sg.Frame(title="Log", font=11, layout = [[sg.Multiline(write_only=True, reroute_stdout=True, size=(30,9))]])
 	rightContent = [
 					  [mngmtFrame],
 					  [sortingFrame],

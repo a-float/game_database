@@ -1,7 +1,6 @@
-import json
 import tabulate as tb
 
-class GameDataBase():
+class GameDatabase():
 	def __init__(self):
 		self.data = {}
 		self.headers = ["name","size","company","rating","price"]
@@ -86,7 +85,7 @@ class GameDataBase():
 	# def load_data(self):	
 
 
-gdb = GameDataBase()
+gdb = GameDatabase()
 gdb.show()
 gdb.add_record(["Battlefield", 30, "EA", 6.5, 69.99])
 gdb.add_record(["Skyrim", 50, "Bethesda", 9, 45.99])
